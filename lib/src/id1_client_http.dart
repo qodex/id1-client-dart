@@ -63,17 +63,14 @@ class Id1ClientHttp implements Id1Client {
     }
     try {
       final resp = await http.get(_toUri(Id1Key("$id/auth"), {}));
-      print("challenge: ${resp.body}");
       Uint8List? challenge;
       try {
         challenge = base64.decode(resp.body.trim());
-      } catch (ee) {
-        print(ee);
+      } catch (e) {
+        logger.fine("error decoding challenge: $e");
       }
       var secret = RSA.decrypt(challenge!, RSA.parsePrivateKeyPEM(privateKey));
-      print("secret: ${secret.length}");
       var secretString = Utf8Decoder(allowMalformed: true).convert(secret);
-      print("secret: $secretString");
       // manchmal geht die uhr auf dem handy vor und dies führt dazu, dass die validierung fehlschlägt
       var iat = DateTime.now().subtract(const Duration(minutes: 5)).millisecondsSinceEpoch ~/ 1000;
       var jwt = JWT({"sub": id, "iat": iat}, issuer: 'https://id1.au').sign(SecretKey(secretString), noIssueAt: true);
@@ -98,7 +95,7 @@ class Id1ClientHttp implements Id1Client {
       case 403:
         throw "forbidden";
       case 401:
-        throw "bad auth token";
+        throw "bad token";
       default:
         throw "http error ${resp.statusCode}";
     }
@@ -124,13 +121,11 @@ class Id1ClientHttp implements Id1Client {
   @override
   Future set(Id1Key key, Uint8List value) async {
     var resp = await http.post(_toUri(key, {}), headers: _headers, body: value);
-    print(resp.statusCode);
-    print(resp.body);
     switch (resp.statusCode) {
       case 403:
         throw "forbidden";
       case 401:
-        throw "bad auth token";
+        throw "bad token";
     }
   }
 
@@ -141,7 +136,7 @@ class Id1ClientHttp implements Id1Client {
       case 403:
         throw "forbidden";
       case 401:
-        throw "bad auth token";
+        throw "bad token";
     }
   }
 
@@ -152,7 +147,7 @@ class Id1ClientHttp implements Id1Client {
       case 403:
         throw "forbidden";
       case 401:
-        throw "bad auth token";
+        throw "bad token";
     }
   }
 

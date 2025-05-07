@@ -38,8 +38,11 @@ crud(String id) async {
     return;
   }
 
-  await id1.set(Id1Key("$id/test/val"), utf8.encode(id));
-  await id1.mov(Id1Key("$id/test/val"), Id1Key("$id/test/tres"));
+  var key = Id1Key("$id/test/val");
+  await id1.set(key, utf8.encode("Hello id1"));
+  var val = await id1.get(key);
+  print(utf8.decode(val ?? []));
+  await id1.del(key);
 
   if (!(await id1.connect())) {
     print("failed to connect");
